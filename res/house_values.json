@@ -1,0 +1,6 @@
+{
+  "Gryffindor": ["courage", "bravery"],
+  "Hufflepuff": ["hard work", "patience", "justice", "loyalty"],
+  "Ravenclaw" : ["intelligence", "creativity", "wit"],
+  "Slytherin" : ["ambition", "cunning", "leadership", "resourcefulness"]
+}
