@@ -1,10 +1,11 @@
 require 'json'
 require 'faker'
+require_relative 'static'
 
 #------------- Init ---------------
-nouns = IO.read('res/Nouns.csv').split(',')
+nouns = Static.nouns
 verbs = ['falling', 'raising', 'missing', 'finding', 'doing', 'fooling', 'accepting']
-adjs = IO.read('res/Adjs.csv').split(',')
+adjs = Static.adjs
 
 data = JSON.parse(IO.read('res/name_dict.json'))
 first_names = data["Gryffindor"]["first_names"].map { |val| val[0] } + data["Hufflepuff"]["first_names"].map { |val| val[0] } + data["Ravenclaw"]["first_names"].map { |val| val[0] } + data["Hufflepuff"]["first_names"].map { |val| val[0] } + data["Slytherin"]["first_names"].map { |val| val[0] }
@@ -65,10 +66,14 @@ def get_requires_permission(count)
 end  
 
 # Returns array of books
-def get_books(adjs, verbs, nouns, first_names, last_names, count)
+def get_res(adjs, verbs, nouns, first_names, last_names, count)
   get_book_names(adjs, verbs, nouns, count).zip(get_authors(first_names, last_names, count), get_date(count), get_requires_permission(count))
 end
 
+result = get_res(adjs, verbs, nouns, first_names, last_names, 5)
+
 # ------------------------------------------------------------
 
-p get_books(adjs, verbs, nouns, first_names, last_names, 5)
+def get_books(data)
+    data.books = result
+end
