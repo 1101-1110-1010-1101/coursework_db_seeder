@@ -6,7 +6,6 @@ class Static
 
     Dir["res/*.csv", "res/*.json"].each do |path|
       resource, ext = /res\/(.+)\.(csv|json)/.match(path).captures
-      p "#{resource} -> #{ext}: #{path}"
 
       data = if ext == 'csv'
           File.read(path).split(',')
