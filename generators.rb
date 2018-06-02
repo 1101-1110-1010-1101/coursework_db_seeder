@@ -1,6 +1,7 @@
 %w(
   static utils
   person house study_plan subject
+  delivery_owls
 ).each { |s| require_relative s } 
 
 def run_all_generators(data)
@@ -13,6 +14,7 @@ end
 
 STUDENTS_PER_HOUSE = 100
 PLANS_PER_YEAR = 4
+OWLS_PER_HOUSE = 10
 
 module Generators
   class << self
@@ -48,6 +50,10 @@ module Generators
       (data.study_plans ||= []).concat study_plans
       (data.teachers ||= []).concat teachers
       (data.subjects ||= []).concat plan_id_to_subject_id.values.flatten(1)
+    end
+
+    def delivery_owls(data, house)
+      (data.delivery_owls ||= []).concat DeliveryOwl.del_owls(Static.house_id(house), OWLS_PER_HOUSE)
     end
   end
 end
