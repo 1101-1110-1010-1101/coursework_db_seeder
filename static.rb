@@ -8,7 +8,7 @@ class Static
       resource, ext = /res\/(.+)\.(csv|json)/.match(path).captures
 
       data = if ext == 'csv'
-          File.read(path).split(',')
+          File.read(path).gsub(/\n$/, '').split(',')
         elsif ext == 'json'
           JSON.parse(File.read(path))
         end
