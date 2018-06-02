@@ -1,6 +1,6 @@
 %w(
   static utils
-  person house study_plan subject
+  person house study_plan subject student_club
   delivery_owls
 ).each { |s| require_relative s } 
 
@@ -10,12 +10,14 @@ def run_all_generators
   generators = Generators.methods(false).reverse
   
   data = OpenStruct.new({
-    students: [], study_plans: [], subjects: [],
+    students: [], study_plans: [], subjects: [], student_clubs: [],
     delivery_owls: [],
     current_house: OpenStruct.new
   })
 
   Static.houses.each { |house| generators.each { |g| Generators.send(g, data, house) } }
+
+  data
 end
 
 STUDENTS_PER_HOUSE = 100
@@ -47,24 +49,26 @@ module Generators
       students = Person.make_many house,
         birth_from: '2001-1-1', birth_to: '2007-12-31', count: STUDENTS_PER_HOUSE
       study_plans, plan_id_to_student_id = StudyPlan.make_many house, students,
-        max_plans_per_year: PLANS_PER_YEAR, study_plan_id_offset: (data.study_plans&.size || 0) + 1
+        max_plans_per_year: PLANS_PER_YEAR, study_plan_id_offset: (data.study_plans.size || 0) + 1
       teachers = Person.make_many house,
         birth_from: '1950-1-1', birth_to: '1990-1-1', count: Subject.teacher_count_required(PLANS_PER_YEAR)
       plan_id_to_subject_id = Subject.make_many teachers, study_plans,
-        teacher_count_multiplier: PLANS_PER_YEAR, study_plan_id_offset: (data.study_plans&.size || 0) + 1
+        teacher_count_multiplier: PLANS_PER_YEAR, study_plan_id_offset: (data.study_plans.size || 0) + 1
 
       first_student_id = data.students.size + 1
-      student_ids_plans = study_plans.transform_values { |v| v.map { last_student_id += 1 } }
+      last_student_id = first_student_id
+      student_ids_plans = plan_id_to_student_id.transform_values { |v| v.map { last_student_id += 1 } }
 
-      data.current_house.student_ids = first_student_id..(first_student_id + students.size)
+      data.current_house.student_ids = first_student_id..last_student_id
       data.students += students
       data.teachers += teachers
 
-      #student_clubs, club_membership = StudentClub.make_many_and_assign_membership students,
-      #  students_per_club: STUDENTS_PER_CLUB
+      student_clubs, club_membership = StudentClub.make_many_and_assign_membership data.current_house.student_ids,
+        students_per_club: STUDENTS_PER_CLUB, club_id_offset: data.student_clubs.size + 1
 
-      #(data.study_plans ||= []).concat study_plans
-      #(data.subjects ||= []).concat plan_id_to_subject_id.values.flatten(1)
+      data.study_plans += study_plans
+      data.subjects += plan_id_to_subject_id.values.flatten(1)
+      data.student_clubs += student_clubs
     end
 
     def delivery_owls(data, house)
