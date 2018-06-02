@@ -4,16 +4,23 @@
   delivery_owls
 ).each { |s| require_relative s } 
 
-def run_all_generators(data)
+def run_all_generators
   # The first generator defined should be run first,
   # so we reverse the method list (which has the last defined one first).
   generators = Generators.methods(false).reverse
   
+  data = OpenStruct.new({
+    students: [], study_plans: [], subjects: [],
+    delivery_owls: [],
+    current_house: OpenStruct.new
+  })
+
   Static.houses.each { |house| generators.each { |g| Generators.send(g, data, house) } }
 end
 
 STUDENTS_PER_HOUSE = 100
 PLANS_PER_YEAR = 4
+STUDENTS_PER_CLUB = 8
 OWLS_PER_HOUSE = 10
 
 module Generators
@@ -46,14 +53,26 @@ module Generators
       plan_id_to_subject_id = Subject.make_many teachers, study_plans,
         teacher_count_multiplier: PLANS_PER_YEAR, study_plan_id_offset: (data.study_plans&.size || 0) + 1
 
-      (data.students ||= []).concat students
-      (data.study_plans ||= []).concat study_plans
-      (data.teachers ||= []).concat teachers
-      (data.subjects ||= []).concat plan_id_to_subject_id.values.flatten(1)
+      first_student_id = data.students.size + 1
+      student_ids_plans = study_plans.transform_values { |v| v.map { last_student_id += 1 } }
+
+      data.current_house.student_ids = first_student_id..(first_student_id + students.size)
+      data.students += students
+      data.teachers += teachers
+
+      #student_clubs, club_membership = StudentClub.make_many_and_assign_membership students,
+      #  students_per_club: STUDENTS_PER_CLUB
+
+      #(data.study_plans ||= []).concat study_plans
+      #(data.subjects ||= []).concat plan_id_to_subject_id.values.flatten(1)
     end
 
     def delivery_owls(data, house)
-      (data.delivery_owls ||= []).concat DeliveryOwl.del_owls(Static.house_id(house), OWLS_PER_HOUSE)
+      first_owl_id = data.delivery_owls.size + 1
+      owls = DeliveryOwl.del_owls(Static.house_id(house), OWLS_PER_HOUSE)
+
+      data.delivery_owls += owls
+      data.current_house.owl_ids = first_owl_id..(first_owl_id + owls.size)
     end
   end
 end

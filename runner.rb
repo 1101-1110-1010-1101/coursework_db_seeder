@@ -1,7 +1,8 @@
 require 'ostruct'
 require_relative 'generators'
+
 require 'pry'
 
-result = OpenStruct.new.tap { |data| run_all_generators(data) }
+result = run_all_generators
 
 binding.pry
