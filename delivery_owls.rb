@@ -7,6 +7,6 @@ DeliveryOwl = Struct.new(:name, :age, :house_id) do
         age = Random.rand(7..20)
         DeliveryOwl[name, age, house_id] 
       end
-    end    
+    end
   end
 end

@@ -1,21 +1,25 @@
 %w(
   static utils
   person house study_plan subject student_club
-  delivery_owls
-).each { |s| require_relative s } 
+  delivery_owls delivery_owl_flights
+  creatures
+  spells
+  books book_lendings
+).each { |s| require_relative s }
+require 'pry'
 
 def run_all_generators
-  # The first generator defined should be run first,
-  # so we reverse the method list (which has the last defined one first).
-  generators = Generators.methods(false).reverse
-  
+  # Generators should run in the order they are defined in source.
+  generators = Generators.methods(false).map { |m| Generators.method(m) }.sort_by { |m| m.source_location.last }
+  #binding.pry
+
   data = OpenStruct.new({
     students: [], study_plans: [], subjects: [], student_clubs: [],
-    delivery_owls: [],
+    delivery_owls: [], delivery_owl_flights: [],
     current_house: OpenStruct.new
   })
 
-  Static.houses.each { |house| generators.each { |g| Generators.send(g, data, house) } }
+  Static.houses.each { |house| generators.each { |g| g.call data, house } }
 
   data
 end
@@ -24,6 +28,10 @@ STUDENTS_PER_HOUSE = 100
 PLANS_PER_YEAR = 4
 STUDENTS_PER_CLUB = 8
 OWLS_PER_HOUSE = 10
+CREATURES_AMOUNT = 20
+SPELLS = 20
+FLIGHTS = 20
+BOOKS = 20
 
 module Generators
   class << self
@@ -61,7 +69,7 @@ module Generators
 
       data.current_house.student_ids = first_student_id..last_student_id
       data.students += students
-      data.teachers += teachers
+      #data.teachers += teachers
 
       student_clubs, club_membership = StudentClub.make_many_and_assign_membership data.current_house.student_ids,
         students_per_club: STUDENTS_PER_CLUB, club_id_offset: data.student_clubs.size + 1
@@ -78,5 +86,29 @@ module Generators
       data.delivery_owls += owls
       data.current_house.owl_ids = first_owl_id..(first_owl_id + owls.size)
     end
+
+    def creatures(data, _house)
+      data.creatures ||= Creature.get_creatures(CREATURES_AMOUNT)
+    end
+
+    def spells(data, _house)
+      data.spells ||= Spell.get_spells(SPELLS, 1..data.teachers.size)
+    end
+
+    def delivery_owl_flights(data, house) #FIXME
+      data.delivery_owl_flights += DeliveryOwlFlight.get_flights(FLIGHTS,
+         data.current_house.owl_ids, data.current_house.student_ids)
+    end
+
+    def books(data, _houses)
+      data.books ||= Book.get_books(BOOKS)
+    end
+
+    def book_lendings(data, house) #FIXME
+      return unless house == Static.houses.last
+      data.book_lendings = BookLending.get_lendings(data.books, 
+        (data.teachers.size + 1)..(data.students.size + data.teachers.size), 1..data.teachers.size)
+    end
+
   end
 end
