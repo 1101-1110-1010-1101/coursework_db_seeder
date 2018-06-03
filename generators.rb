@@ -1,7 +1,7 @@
 %w(
   static utils
   person house study_plan subject student_club student_profile
-  classroom_booking
+  classroom_booking exam_result
   delivery_owls delivery_owl_flights delivery_owl_repair_jobs
   creatures
   spells spell_books
@@ -18,7 +18,7 @@ def run_all_generators
 
   data = OpenStruct.new({
     students: [], study_plans: [], subjects: [], student_clubs: [], student_profiles: [],
-    classroom_bookings: [],
+    classroom_bookings: [], exam_results: [],
     delivery_owls: [], delivery_owl_flights: [],
     current_house: OpenStruct.new
   })
@@ -67,7 +67,7 @@ module Generators
         student_id_offset: data.students.size + 1
       teachers = Person.make_many house,
         birth_from: '1950-1-1', birth_to: '1990-1-1', count: Subject.teacher_count_required(PLANS_PER_YEAR)
-      subjects, plan_id_to_subject_id = Subject.make_many teachers, study_plans,
+      subjects, plan_id_to_subject_ids = Subject.make_many teachers, study_plans,
         teacher_count_multiplier: PLANS_PER_YEAR,
         study_plan_id_offset: data.study_plans.size + 1,
         subject_id_offset: data.subjects.size + 1
@@ -85,20 +85,26 @@ module Generators
       # 
       # Now that we have profiles, we build up a hash of { person id => profile id } and use it
       # to reassign club president ids.
-      profile_ids_students, _ = student_profiles.reduce([{}, data.student_profiles.size + 1]) do |(acc, current_profile_id), p| 
+      person_id_to_profile_id, _ = student_profiles.reduce([{}, data.student_profiles.size + 1]) do |(acc, current_profile_id), p| 
         acc[p.person_id] = current_profile_id
         [acc, current_profile_id + 1]
       end
-      student_clubs.each { |c| c.president_id = profile_ids_students[c.president_id] }
+      student_clubs.each { |c| c.president_id = person_id_to_profile_id[c.president_id] }
 
-      classroom_bookings = ClassroomBooking.make_all plan_id_to_subject_id,
+      classroom_bookings = ClassroomBooking.make_all plan_id_to_subject_ids,
         (data.student_clubs.size + 1)..(data.student_clubs.size + student_clubs.size)
 
+      plan_id_to_student_info = ExamResult.plan_id_to_student_info students,
+        plan_id_to_student_id, person_id_to_profile_id,
+        student_id_offset: data.current_house.student_ids.min
+      exam_results = ExamResult.make_all plan_id_to_student_info, plan_id_to_subject_ids
+
       data.study_plans += study_plans
-      data.subjects += plan_id_to_subject_id.values.flatten(1)
+      data.subjects += subjects
       data.student_clubs += student_clubs
       data.student_profiles += student_profiles
       data.classroom_bookings += classroom_bookings
+      data.exam_results += exam_results
     end
 
     def delivery_owls(data, house)
