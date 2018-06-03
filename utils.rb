@@ -17,16 +17,40 @@ class Range
   end
 end
 
-class DateRange
-  def initialize(date_f, date_s)
-    @start = date_f
-    @end = date_s
+class DateRangeGenerator
+  def initialize
+    @occupied_ranges = []
   end
 
-  def includes?(date)
-    date >= @start && (@end.nil? || date <= @end)
+  # Accept :even_years or :odd_years
+  def limited_to(year_kind)
+    @limited_to = year_kind
+    self
+  end
+
+  def gen(from, offset)
+    departed_on, returned_on = if 90.percent_chance
+        departed_on = date_between(from, Date.today)
+        returned_on = Faker::Time.between(departed_on, departed_on.to_time + offset, :all)
+        [departed_on, returned_on]
+      else
+        [Faker::Time.between(offset.ago, Date.today, :all), nil]
+      end
+    return gen(from, offset) if @limited_to == :even_years && departed_on.year.odd? || @limited_to == :odd_years && departed_on.year.even?
+    return gen(from, offset) if @occupied_ranges.any? { |v| includes?(v, departed_on) || includes?(v, returned_on) }
+    @occupied_ranges << [departed_on, returned_on]
+    [departed_on, returned_on].map { |val| val.to_s[0..-7] }
+  end
+
+  def includes?(range, date)
+    if date == nil
+      return false
+    else
+      date >= range.first && (range.last.nil? || date <= range.last)
+    end
   end
 end
+
 
 class Array
   def sample_with_index

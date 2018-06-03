@@ -79,13 +79,13 @@ module Generators
       student_clubs, student_id_to_club_id = StudentClub.make_many_and_assign_membership data.current_house.student_ids,
         students_per_club: STUDENTS_PER_CLUB, club_id_offset: data.student_clubs.size + 1
       student_profiles = StudentProfile.make_all plan_id_to_student_id, student_id_to_club_id
-   
+
       # This is important! Student clubs are generated prior to profiles, and their #president_id
       # refers to an entry in `people`, not `student_profiles` as it should.
-      # 
+      #
       # Now that we have profiles, we build up a hash of { person id => profile id } and use it
       # to reassign club president ids.
-      person_id_to_profile_id, _ = student_profiles.reduce([{}, data.student_profiles.size + 1]) do |(acc, current_profile_id), p| 
+      person_id_to_profile_id, _ = student_profiles.reduce([{}, data.student_profiles.size + 1]) do |(acc, current_profile_id), p|
         acc[p.person_id] = current_profile_id
         [acc, current_profile_id + 1]
       end
@@ -134,7 +134,7 @@ module Generators
 
     def book_lendings(data, house) # FIXME (date conflict)
       return unless house == Static.houses.last
-      data.book_lendings = BookLending.get_lendings(data.books, 
+      data.book_lendings = BookLending.get_lendings(data.books,
         (data.teachers.size + 1)..(data.students.size + data.teachers.size), 1..data.teachers.size)
     end
 
