@@ -18,7 +18,7 @@ class Range
 end
 
 class DateRange
-  def new(date_f, date_s)
+  def initialize(date_f, date_s)
     @start = date_f
     @end = date_s
   end
