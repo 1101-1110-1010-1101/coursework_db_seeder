@@ -17,7 +17,7 @@ BookLending = Struct.new(:book_id, :lendee_id, :permitted_by_id, :checked_out_on
               nil
             end
             #ranges.any? { |range| range.includes?(checked_out_on) || range.includes?(checked_out_on) }
-            ranges << DateRange.new(checked_out_on, checked_in_on)
+            #ranges << DateRange.new(checked_out_on, checked_in_on)
             if book.requires_permission
               permitted_by_id = teachers_ids.sample
             else

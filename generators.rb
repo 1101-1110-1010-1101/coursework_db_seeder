@@ -2,10 +2,12 @@
   static utils
   person house study_plan subject student_club student_profile
   classroom_booking
-  delivery_owls delivery_owl_flights
+  delivery_owls delivery_owl_flights delivery_owl_repair_jobs
   creatures
-  spells
+  spells spell_books
   books book_lendings
+  events
+  creature_books
 ).each { |s| require_relative s }
 require 'pry'
 
@@ -34,6 +36,8 @@ CREATURES_AMOUNT = 20
 SPELLS = 20
 FLIGHTS = 20
 BOOKS = 20
+REPAIRS = 20
+EVENTS = 20
 
 module Generators
   class << self
@@ -113,7 +117,7 @@ module Generators
       data.spells ||= Spell.get_spells(SPELLS, 1..data.teachers.size)
     end
 
-    def delivery_owl_flights(data, house) #FIXME
+    def delivery_owl_flights(data, house) # FIXME (date conflict)
       data.delivery_owl_flights += DeliveryOwlFlight.get_flights(FLIGHTS,
          data.current_house.owl_ids, data.current_house.student_ids)
     end
@@ -122,11 +126,28 @@ module Generators
       data.books ||= Book.get_books(BOOKS)
     end
 
-    def book_lendings(data, house) #FIXME
+    def book_lendings(data, house) # FIXME (date conflict)
       return unless house == Static.houses.last
       data.book_lendings = BookLending.get_lendings(data.books, 
         (data.teachers.size + 1)..(data.students.size + data.teachers.size), 1..data.teachers.size)
     end
 
+    def delivery_owl_repair_jobs(data, _house) # FIXME (date conflict)
+      data.delivery_owl_repair_jobs = DeliveryOwlsRepairJob.get_repair_jobs(data.delivery_owls, 1..data.teachers.size)
+    end
+
+    def spell_books(data, _house)
+      data.spell_books = SpellBook.get_spellbook((1..data.books.size), (1..data.spells.size))
+    end
+
+    def events(data, _house)
+      data.events = Event.get_events(EVENTS)
+    end
+
+    def creature_books(data, _house)
+      data.creature_books = CreatureBook.get_creaturebook((1..data.books.size), (1..data.creatures.size))
+    end
+
+    
   end
 end
