@@ -1,6 +1,7 @@
 %w(
   static utils
   person house study_plan subject student_club student_profile
+  classroom_booking
   delivery_owls delivery_owl_flights
   creatures
   spells
@@ -15,6 +16,7 @@ def run_all_generators
 
   data = OpenStruct.new({
     students: [], study_plans: [], subjects: [], student_clubs: [], student_profiles: [],
+    classroom_bookings: [],
     delivery_owls: [], delivery_owl_flights: [],
     current_house: OpenStruct.new
   })
@@ -61,8 +63,10 @@ module Generators
         student_id_offset: data.students.size + 1
       teachers = Person.make_many house,
         birth_from: '1950-1-1', birth_to: '1990-1-1', count: Subject.teacher_count_required(PLANS_PER_YEAR)
-      plan_id_to_subject_id = Subject.make_many teachers, study_plans,
-        teacher_count_multiplier: PLANS_PER_YEAR, study_plan_id_offset: data.study_plans.size + 1
+      subjects, plan_id_to_subject_id = Subject.make_many teachers, study_plans,
+        teacher_count_multiplier: PLANS_PER_YEAR,
+        study_plan_id_offset: data.study_plans.size + 1,
+        subject_id_offset: data.subjects.size + 1
 
       data.current_house.student_ids = (data.students.size + 1)..(data.students.size + students.size)
       data.students += students
@@ -83,10 +87,14 @@ module Generators
       end
       student_clubs.each { |c| c.president_id = profile_ids_students[c.president_id] }
 
+      classroom_bookings = ClassroomBooking.make_all plan_id_to_subject_id,
+        (data.student_clubs.size + 1)..(data.student_clubs.size + student_clubs.size)
+
       data.study_plans += study_plans
       data.subjects += plan_id_to_subject_id.values.flatten(1)
       data.student_clubs += student_clubs
       data.student_profiles += student_profiles
+      data.classroom_bookings += classroom_bookings
     end
 
     def delivery_owls(data, house)

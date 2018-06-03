@@ -58,23 +58,26 @@ Subject = Struct.new(:name, :study_plan_id, :teacher_id) do
       @base_teacher_count * multiplier
     end
 
-    # [Person] -> [StudyPlan] -> { study plan id => [Subjects] }
-    def make_many(teachers, study_plans, teacher_count_multiplier: 1, study_plan_id_offset: 1)
+    # [Person] -> [StudyPlan] -> [[Subject], { study plan id => subject_id }]
+    def make_many(teachers, study_plans, teacher_count_multiplier: 1, study_plan_id_offset:, subject_id_offset:)
       subject_teacher_ids, _ = @subject_freqs.reduce([{}, 0]) do |(acc, teacher_id), (s, freq)|
         acc[s] = (1..(freq * teacher_count_multiplier)).map { teacher_id += 1 }
         [acc, teacher_id]
       end
 
-      subjects_by_plan, _ = study_plans.each_with_index.reduce([{}, Hash.new(-1)]) do |(acc, teachers_assigned), ((_, year), id)|
-        plan_id = study_plan_id_offset + id
-        acc[plan_id] = Static.subjects.select { |s| s['years'].include? year }.map do |s|
-          name = subject_name(s, year)
-          [name, plan_id, subject_teacher_ids[name][teachers_assigned[name] += 1]]
+      subjects, subjects_by_plan, _ =
+        study_plans.each_with_index.reduce([[], {}, Hash.new(-1)]) do |(subjects, plans_subjects, teachers), ((_, year), id)|
+          plan_id = study_plan_id_offset + id
+          first_subject_index = subjects.size
+          subjects += Static.subjects.select { |s| s['years'].include? year }.map do |s|
+            name = subject_name(s, year)
+            Subject[name, plan_id, subject_teacher_ids[name][teachers[name] += 1]]
+          end
+          plans_subjects[plan_id] = ((subject_id_offset + first_subject_index)..(subject_id_offset + subjects.size - 1)).to_a
+          [subjects, plans_subjects, teachers]
         end
-        [acc, teachers_assigned]
-      end
 
-      subjects_by_plan
+      [subjects, subjects_by_plan]
     end
   end
 end
