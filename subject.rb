@@ -66,11 +66,11 @@ Subject = Struct.new(:name, :study_plan_id, :teacher_id) do
       end
 
       subjects, subjects_by_plan, _ =
-        study_plans.each_with_index.reduce([[], {}, Hash.new(-1)]) do |(subjects, plans_subjects, teachers), ((_, year), id)|
+        study_plans.each_with_index.reduce([[], {}, Hash.new(-1)]) do |(subjects, plans_subjects, teachers), (plan, id)|
           plan_id = study_plan_id_offset + id
           first_subject_index = subjects.size
-          subjects += Static.subjects.select { |s| s['years'].include? year }.map do |s|
-            name = subject_name(s, year)
+          subjects += Static.subjects.select { |s| s['years'].include? plan.academic_year }.map do |s|
+            name = subject_name(s, plan.academic_year)
             Subject[name, plan_id, subject_teacher_ids[name][teachers[name] += 1]]
           end
           plans_subjects[plan_id] = ((subject_id_offset + first_subject_index)..(subject_id_offset + subjects.size - 1)).to_a

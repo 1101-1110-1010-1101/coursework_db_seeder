@@ -5,7 +5,7 @@ StudyPlan = Struct.new(:house_id, :academic_year) do
       acc_init = { plans: [], grouped: {}, student_id: student_id_offset - 1 }
       students_by_years(students).reduce(acc_init) do |acc, (year, studs)|
         plans_this_year = [studs.size, max_plans_per_year].min
-        acc[:plans].concat((1..plans_this_year).map { [Static.house_id(house), year] })
+        acc[:plans].concat((1..plans_this_year).map { StudyPlan[Static.house_id(house), year] })
         studs.each_with_index do |s, i|
           plan_id = study_plan_id_offset + (i % plans_this_year)
           (acc[:grouped][plan_id] ||= []) << (acc[:student_id] += 1)

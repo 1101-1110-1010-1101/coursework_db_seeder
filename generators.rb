@@ -1,3 +1,4 @@
+require 'ostruct'
 %w(
   static utils
   person house study_plan subject student_club student_profile
@@ -8,7 +9,6 @@
   books book_lendings
   events
 ).each { |s| require_relative s }
-require 'pry'
 
 def run_all_generators
   # Generators should run in the order they are defined in source.
@@ -24,6 +24,7 @@ def run_all_generators
 
   Static.houses.each { |house| generators.each { |g| g.call data, house } }
 
+  data.delete_field :current_house
   data
 end
 
@@ -156,6 +157,11 @@ module Generators
     def creature_domestications(data, house)
       return unless house == Static.houses.last
       data.creature_domestications = CreatureDomestication.get_domestications((1..data.creatures.size), data.teachers + data.students)
+    end
+
+    def merge_teachers_and_students(data, house)
+      return unless house == Static.houses.last
+      data.people = data.delete_field(:teachers) + data.delete_field(:students)
     end
   end
 end

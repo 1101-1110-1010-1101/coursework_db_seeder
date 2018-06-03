@@ -1,10 +1,12 @@
 #!/usr/bin/env ruby
 
-require 'ostruct'
+require 'csv'
+require 'pry'
 require_relative 'generators'
 
-require 'pry'
-
-result = run_all_generators
-
-binding.pry
+run_all_generators.each_pair do |table, data|
+  CSV.open("out/#{table}.csv", 'w') do |csv|
+    csv << data.first.members # headers
+    data.each { |r| csv << r.to_h.values }
+  end
+end
