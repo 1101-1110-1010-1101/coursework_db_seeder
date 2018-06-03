@@ -13,7 +13,7 @@ end
 
 class Range
   def sample
-    self.to_a.sample
+    Random.rand(self)
   end
 end
 
