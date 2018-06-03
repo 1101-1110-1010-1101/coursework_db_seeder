@@ -4,9 +4,13 @@ require 'csv'
 require 'pry'
 require_relative 'generators'
 
+script_lines = []
+
 run_all_generators.each_pair do |table, data|
   CSV.open("out/#{table}.csv", 'w') do |csv|
-    csv << data.first.members # headers
     data.each { |r| csv << r.to_h.values }
   end
+  script_lines << "psql -h pg -d studs -c 'COPY #{table}(#{data.first.members.join(',')}) FROM STDIN WITH CSV' < #{table}.csv"
 end
+
+File.write 'out/import_csv', '#!/usr/bin/env sh' + "\n" + script_lines.join("\n") + "\n"
