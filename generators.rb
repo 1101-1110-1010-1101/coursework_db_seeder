@@ -3,11 +3,10 @@
   person house study_plan subject student_club student_profile
   classroom_booking exam_result
   delivery_owls delivery_owl_flights delivery_owl_repair_jobs
-  creatures
+  creatures creature_books creature_domestications
   spells spell_books
   books book_lendings
   events
-  creature_books
 ).each { |s| require_relative s }
 require 'pry'
 
@@ -154,6 +153,9 @@ module Generators
       data.creature_books = CreatureBook.get_creaturebook((1..data.books.size), (1..data.creatures.size))
     end
 
-    
+    def creature_domestications(data, house)
+      return unless house == Static.houses.last
+      data.creature_domestications = CreatureDomestication.get_domestications((1..data.creatures.size), data.teachers + data.students)
+    end
   end
 end

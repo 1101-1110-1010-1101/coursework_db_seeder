@@ -27,3 +27,9 @@ class DateRange
     date >= @start && (@end.nil? || date <= @end)
   end
 end
+
+class Array
+  def sample_with_index
+    Random.rand(0..self.size - 1).yield_self { |i| [self[i], i] }
+  end
+end
