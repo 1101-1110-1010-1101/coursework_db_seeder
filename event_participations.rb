@@ -1,4 +1,4 @@
-EventParticipation = Struct.new(:event_id, :student_profile_id, :is_positive, :score, :participation_date) do
+EventParticipation = Struct.new(:event_id, :student_profile_id, :is_positive, :score, :date) do
   class << self
     def get_participations(profile_id_to_person, events)
       events.flat_map.with_index do |event, event_index|

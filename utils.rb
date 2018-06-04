@@ -12,7 +12,7 @@ def date_between(start_date, end_date)
     if range.min.nil? then (range.last..range.first).sample else range.sample end
   end
   d = DateTime.new(date.year, date.month, date.day, h, m, s)
-  d = date_between(start_date, end_date) if d < start_date # occurs like once in a blue moon, not enough time to debug this properly
+  d = date_between(start_date, end_date) if d < start_date || d > end_date # occurs like once in a blue moon, not enough time to debug this properly
   d
 end
 
