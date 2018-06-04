@@ -7,7 +7,7 @@ require 'ostruct'
   creatures creature_books creature_domestications
   spells spell_books
   books book_lendings
-  events
+  events event_participations
 ).each { |s| require_relative s }
 
 def run_all_generators
@@ -157,10 +157,6 @@ module Generators
       data.spell_books = SpellBook.get_spellbook((1..data.books.size), (1..data.spells.size))
     end
 
-    def events(data, _house)
-      data.events = Event.get_events(EVENTS)
-    end
-
     def creature_books(data, _house)
       data.creature_books = CreatureBook.get_creaturebook((1..data.books.size), (1..data.creatures.size))
     end
@@ -178,8 +174,18 @@ module Generators
     def temp_profile_id_to_person(data, house)
       return unless house == Static.houses.last
       data.profile_id_to_person = data.student_profiles.map.with_index do |profile, profile_index|
-        [data.people[profile.person_id - 1], profile_index + 1]
+        [profile_index + 1, data.people[profile.person_id - 1]]
       end.to_h
+    end
+
+    def events(data, house)
+      return unless house == Static.houses.last
+      data.events = Event.get_events(EVENTS, data.people)
+    end
+
+    def event_participations(data, house)
+      return unless house == Static.houses.last
+      data.event_participations = EventParticipation.get_participations(data.profile_id_to_person, data.events)
     end
   end
 end
