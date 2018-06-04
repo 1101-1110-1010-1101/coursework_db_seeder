@@ -1,4 +1,4 @@
-Creature = Struct.new(:name, :mom_classification, :discovered_on) do
+Creature = Struct.new(:generic_name, :mom_classification, :discovered_on) do
   class << self
     def get_creatures(count)
       i_array = []
