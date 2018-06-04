@@ -30,8 +30,7 @@ def run_all_generators
     end
   end
 
-  data.delete_field :current_house
-  data.delete_field :house_teacher_range
+  %i(current_house house_teacher_range profile_id_to_person).each { |f| data.delete_field f }
   data
 end
 
@@ -174,6 +173,13 @@ module Generators
     def merge_teachers_and_students(data, house)
       return unless house == Static.houses.last
       data.people = data.delete_field(:teachers) + data.delete_field(:students)
+    end
+
+    def temp_profile_id_to_person(data, house)
+      return unless house == Static.houses.last
+      data.profile_id_to_person = data.student_profiles.map.with_index do |profile, profile_index|
+        [data.people[profile.person_id - 1], profile_index + 1]
+      end.to_h
     end
   end
 end
