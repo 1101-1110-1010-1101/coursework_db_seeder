@@ -135,7 +135,7 @@ module Generators
       data.spells ||= Spell.get_spells(SPELLS, 1..data.teachers.size)
     end
 
-    def delivery_owl_flights(data, house) # FIXME (date conflict)
+    def delivery_owl_flights(data, house)
       data.delivery_owl_flights += DeliveryOwlFlight.get_flights(FLIGHTS,
          data.current_house.owl_ids, data.current_house.student_ids)
     end
@@ -144,13 +144,13 @@ module Generators
       data.books ||= Book.get_books(BOOKS)
     end
 
-    def book_lendings(data, house) # FIXME (date conflict)
+    def book_lendings(data, house)
       return unless house == Static.houses.last
       data.book_lendings = BookLending.get_lendings(data.books,
         (data.teachers.size + 1)..(data.students.size + data.teachers.size), 1..data.teachers.size)
     end
 
-    def delivery_owl_repair_jobs(data, _house) # FIXME (date conflict)
+    def delivery_owl_repair_jobs(data, _house)
       data.delivery_owl_repair_jobs = DeliveryOwlsRepairJob.get_repair_jobs(data.delivery_owls, 1..data.teachers.size)
     end
 
