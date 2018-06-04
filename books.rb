@@ -13,7 +13,7 @@ Book = Struct.new(:title, :author, :added_on, :requires_permission) do
           lambda { "#{Static.nouns.sample}, #{Static.nouns.sample}, and #{Static.adjs.sample} #{Static.nouns.sample}" }
         ]
         title = templates.sample.call.titleize
-        added_on = Faker::Time.backward(100000, :all).to_s[0..-7]
+        added_on = Faker::Time.backward(100000, :all).to_s
         requires_permission = 20.percent_chance
         Book[title, author, added_on, requires_permission]
       end

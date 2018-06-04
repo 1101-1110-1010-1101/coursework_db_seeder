@@ -1,6 +1,8 @@
 require 'faker'
 require 'active_support/all'
 
+Time::DATE_FORMATS[:default] = '%F %T' # ISO8601 without a timezone
+
 def date_between(start_date, end_date)
   Faker::Time.between(start_date.to_datetime, end_date.to_datetime)
 end
@@ -39,7 +41,7 @@ class DateRangeGenerator
     return gen(from, offset) if @limited_to == :even_years && departed_on.year.odd? || @limited_to == :odd_years && departed_on.year.even?
     return gen(from, offset) if @occupied_ranges.any? { |v| includes?(v, departed_on) || includes?(v, returned_on) }
     @occupied_ranges << [departed_on, returned_on]
-    [departed_on, returned_on].map { |val| val.to_s[0..-7] }
+    [departed_on, returned_on].map { |d| d&.to_s }
   end
 
   def includes?(range, date)

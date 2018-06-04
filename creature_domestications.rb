@@ -10,9 +10,9 @@ CreatureDomestication = Struct.new(:creature_id, :domesticated_by_id, :domestica
           girl, girl_index = people.sample_with_index
           domesticated_by_id = girl_index + 1
           domesticated_on = if girl.death_date != nil
-              Faker::Time.between(girl.birth_date + 15.years, girl.death_date, :all).to_s[0..-7]
+              Faker::Time.between(girl.birth_date + 15.years, girl.death_date, :all).to_s
             else
-              Faker::Time.between(girl.birth_date + 15.years, Date.today, :all).to_s[0..-7]
+              Faker::Time.between(girl.birth_date + 15.years, Date.today, :all).to_s
             end
           name = Static.owl_names.sample
           name_given = "#{(@letter_adj[name.first.to_sym] || @adj).sample} #{name}"

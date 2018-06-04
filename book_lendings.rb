@@ -7,12 +7,12 @@ BookLending = Struct.new(:book_id, :lendee_id, :permitted_by_id, :checked_out_on
             lendee_id = student_ids.sample
             var = 90.percent_chance
             checked_out_on = if var
-                date_between('1970-1-1', 7.days.ago).to_s[0..-7]
+                date_between('1970-1-1', 7.days.ago).to_s
               else
-                Faker::Time.between(7.days.ago, Date.today, :all).to_s[0..-7]
+                Faker::Time.between(7.days.ago, Date.today, :all).to_s
               end
             checked_in_on = if var
-              Faker::Time.between(checked_out_on, checked_out_on.to_time + 7.days, :all).to_s[0..-7]
+              Faker::Time.between(checked_out_on, checked_out_on.to_time + 7.days, :all).to_s
             else
               nil
             end

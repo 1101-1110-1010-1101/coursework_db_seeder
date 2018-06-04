@@ -12,7 +12,7 @@ Creature = Struct.new(:name, :mom_classification, :discovered_on) do
         end
         i_array << i
         name, mom_classification = Static.creatures[i].split(':')
-        discovered_on = Faker::Time.backward(100000, :all).to_s[0..-7]
+        discovered_on = Faker::Time.backward(100000, :all).to_s
         Creature[name, mom_classification, discovered_on]
       end
     end
