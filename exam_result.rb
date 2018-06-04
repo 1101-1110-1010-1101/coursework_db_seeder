@@ -1,4 +1,4 @@
-ExamResult = Struct.new(:subject_id, :profile_id, :attended_on, :mark) do
+ExamResult = Struct.new(:subject_id, :student_profile_id, :attended_on, :mark) do
   # How likely any given student is to pass an exam
   @exam_passabilities = [40] + [75, 75] + 8.times.map { 90 } + 4.times.map { 100 }
 
