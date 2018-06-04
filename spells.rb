@@ -6,7 +6,7 @@ Spell = Struct.new(:counterspell_id, :creator_id, :name, :description, :type, :i
         creator_id = teachers_id_range.to_a.sample
         name = "#{Static.latin_vocabulary_list.sample} #{Static.latin_vocabulary_list.sample}"
         description = ''
-        type = ['Conjuration', 'Charm', 'Healing Spell' ,'Curse' ,'Transfiguration'].sample
+        type = ['conjuration', 'charm', 'healing spell' ,'curse' ,'transfiguration'].sample
         is_forbidden = 20.percent_chance
         Spell[counterspell_id, creator_id, name, description, type, is_forbidden]
       end
