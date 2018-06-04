@@ -9,8 +9,9 @@ Event = Struct.new(:name, :started_on, :ended_on) do
           lambda { "#{Static.h2.sample} of #{Static.h3.sample}" }
           ]
         name = resource.sample.call
-        started_on = Faker::Time.between('1970-1-1'.to_datetime, DateTime.now, :day) - 1.hour
-        ended_on = Faker::Time.between(started_on, started_on + 2.days, :evening)
+        started_on = date_between('1970-1-1'.to_datetime, DateTime.now)
+        ended_on = date_between(started_on + 5.minutes, started_on + 2.days)
+        binding.pry if started_on > ended_on
         Event[name, started_on.to_s, ended_on.to_s]
       end
     end
