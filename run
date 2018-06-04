@@ -4,13 +4,23 @@ require 'csv'
 require 'pry'
 require_relative 'generators'
 
-script_lines = []
-
-run_all_generators.each_pair do |table, data|
+results = run_all_generators
+results.each_pair do |table, data|
   CSV.open("out/#{table}.csv", 'w') do |csv|
     data.each { |r| csv << r.to_h.values }
   end
-  script_lines << "psql -h pg -d studs -c 'COPY #{table}(#{data.first.members.join(',')}) FROM STDIN WITH CSV' < #{table}.csv"
 end
 
-File.write 'out/import_csv', '#!/usr/bin/env sh' + "\n" + script_lines.join("\n") + "\n"
+def import_script_lines(results)
+  psql_cmd = lambda { |c| "psql -h pg -d studs -c '#{c}'" }
+  script_lines = lambda { |ts| ts.map { |t| psql_cmd.("COPY #{t}(#{results[t].first.members.join(',')}) FROM STDIN WITH CSV") + " < #{t}.csv"} }
+
+  script_lines.(%i(people houses study_plans subjects)) + [
+    psql_cmd.('alter table student_clubs drop constraint student_clubs_president_id_fkey;')
+  ] + script_lines.(%i(student_clubs student_profiles)) + [
+    psql_cmd.('alter table student_clubs add constraint student_clubs_president_id_fkey foreign key (president_id) references student_profiles (id);')
+  ] + script_lines.(%i(classroom_bookings exam_results events delivery_owls delivery_owl_flights delivery_owl_repair_jobs
+        books book_lendings spells spell_books creatures creature_books creature_domestications))
+end
+
+File.write 'out/import_csv', (['#!/usr/bin/env sh'] + import_script_lines(results) + ['']).join("\n")
