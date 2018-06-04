@@ -13,18 +13,25 @@ require 'ostruct'
 def run_all_generators
   # Generators should run in the order they are defined in source.
   generators = Generators.methods(false).map { |m| Generators.method(m) }.sort_by { |m| m.source_location.last }
-  #binding.pry
 
   data = OpenStruct.new({
     students: [], study_plans: [], subjects: [], student_clubs: [], student_profiles: [],
     classroom_bookings: [], exam_results: [],
     delivery_owls: [], delivery_owl_flights: [],
-    current_house: OpenStruct.new
+    current_house: OpenStruct.new,
+    house_teacher_range: {}
   })
 
-  Static.houses.each { |house| generators.each { |g| g.call data, house } }
+  Static.houses.each do |house|
+    puts "=== #{house}"
+    generators.each do |g|
+      puts g.name
+      g.call data, house
+    end
+  end
 
   data.delete_field :current_house
+  data.delete_field :house_teacher_range
   data
 end
 
@@ -50,31 +57,36 @@ module Generators
       ]
     end
 
-    def people_deans(data, _house)
-      data.teachers ||= [
+    def teachers(data, _house)
+      return unless data.teachers.nil?
+      data.teachers = [
         Person['Minerva McGonagall', '1931-10-04'.to_datetime, nil, 'courage', 'female', "Gryffindor's Dean"],
         Person['Pomona Sprout', '1941-05-15'.to_datetime, nil, 'hard work', 'female', "Hufflepuff's Dean"],
         Person['Filius Flitwick', '1958-10-17'.to_datetime, nil, 'wit', 'male', "Ravenclaw's Dean"],
         Person['Severus Snape', '1960-01-06'.to_datetime, nil, 'leadership', 'male', "Slytherin's Dean"]
       ]
+      Static.houses.map do |house|
+        teachers = Person.make_many house,
+          birth_from: '1950-1-1', birth_to: '1990-1-1', count: Subject.teacher_count_required(PLANS_PER_YEAR)
+        data.house_teacher_range[house] = (data.teachers.size + 1)..(data.teachers.size + teachers.size)
+        data.teachers += teachers
+      end
     end
 
     def student_activity(data, house)
       students = Person.make_many house,
         birth_from: '2001-1-1', birth_to: '2007-12-31', count: STUDENTS_PER_HOUSE
+      teachers = data.teachers[data.house_teacher_range[house]]
       study_plans, plan_id_to_student_id = StudyPlan.make_many house, students,
         max_plans_per_year: PLANS_PER_YEAR, study_plan_id_offset: data.study_plans.size + 1,
-        student_id_offset: data.students.size + 1
-      teachers = Person.make_many house,
-        birth_from: '1950-1-1', birth_to: '1990-1-1', count: Subject.teacher_count_required(PLANS_PER_YEAR)
+        student_id_offset: data.teachers.size + data.students.size + 1
       subjects, plan_id_to_subject_ids = Subject.make_many teachers, study_plans,
         teacher_count_multiplier: PLANS_PER_YEAR,
         study_plan_id_offset: data.study_plans.size + 1,
         subject_id_offset: data.subjects.size + 1
 
-      data.current_house.student_ids = (data.students.size + 1)..(data.students.size + students.size)
+      data.current_house.student_ids = (data.teachers.size + data.students.size + 1)..(data.teachers.size + data.students.size + students.size)
       data.students += students
-      data.teachers += teachers
 
       student_clubs, student_id_to_club_id = StudentClub.make_many_and_assign_membership data.current_house.student_ids,
         students_per_club: STUDENTS_PER_CLUB, club_id_offset: data.student_clubs.size + 1
