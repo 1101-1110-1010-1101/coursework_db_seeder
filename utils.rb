@@ -11,7 +11,9 @@ def date_between(start_date, end_date)
   h, m, s = [(sample_from.hour..sample_to.hour), (sample_from.minute..sample_to.minute), (sample_from.second..sample_to.second)].map do |range|
     if range.min.nil? then (range.last..range.first).sample else range.sample end
   end
-  DateTime.new(date.year, date.month, date.day, h, m, s)
+  d = DateTime.new(date.year, date.month, date.day, h, m, s)
+  d = date_between(start_date, end_date) if d < start_date # occurs like once in a blue moon, not enough time to debug this properly
+  d
 end
 
 class Integer
@@ -38,28 +40,27 @@ class DateRangeGenerator
   end
 
   def gen(from, offset)
-    departed_on, returned_on = if 90.percent_chance
-        departed_on = date_between(from, Date.today)
-        returned_on = date_between(departed_on, departed_on.to_time + offset)
-        [departed_on, returned_on]
+    to = DateTime.now
+    start_date, end_date = if @has_nil_end_date || 90.percent_chance
+        start_date = date_between(from, to)
+        end_date = date_between(start_date, start_date + offset)
+        [start_date, end_date]
       else
-        [date_between(offset.ago, Date.today), nil]
+        [date_between(offset.ago, to), nil]
       end
-    return gen(from, offset) if @limited_to == :even_years && departed_on.year.odd? || @limited_to == :odd_years && departed_on.year.even?
-    return gen(from, offset) if @occupied_ranges.any? { |v| includes?(v, departed_on) || includes?(v, returned_on) }
-    @occupied_ranges << [departed_on, returned_on]
-    [departed_on, returned_on].map { |d| d&.to_s }
+    return gen(from, offset) if (@limited_to == :even_years && start_date.year.odd? ||
+                                 @limited_to == :odd_years && start_date.year.even? ||
+                                 @occupied_ranges.any? { |v| includes?(v, start_date) || includes?(v, end_date) })
+    @occupied_ranges << [start_date, end_date]
+    @has_nil_end_date = true if end_date.nil?
+    [start_date, end_date].map { |d| d&.to_s }
   end
 
   def includes?(range, date)
-    if date == nil
-      return false
-    else
-      date >= range.first && (range.last.nil? || date <= range.last)
-    end
+    return false if date.nil?
+    date >= range.first && (range.last.nil? || date <= range.last)
   end
 end
-
 
 class Array
   def sample_with_index

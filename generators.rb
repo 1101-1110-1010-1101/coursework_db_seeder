@@ -124,7 +124,7 @@ module Generators
       owls = DeliveryOwl.del_owls(Static.house_id(house), OWLS_PER_HOUSE)
 
       data.delivery_owls += owls
-      data.current_house.owl_ids = first_owl_id..(first_owl_id + owls.size)
+      data.current_house.owl_ids = first_owl_id..(first_owl_id + owls.size - 1)
     end
 
     def creatures(data, _house)
